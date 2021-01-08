@@ -1,0 +1,188 @@
+% Package for creating front pages for master's theses.
+% Implemented by Martin Helsø (martibhe@math.uio.no).
+% Version 2015-08-22.
+
+%% Identification part:
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]
+
+\ProvidesClass{masterfrontpage}
+
+%% Standard headers:
+
+\DeclareOption{american} { \def \MFP@lang {eng} }
+\DeclareOption{english}  { \def \MFP@lang {eng} }
+\DeclareOption{UKenglish}{ \def \MFP@lang {eng} }
+\DeclareOption{USenglish}{ \def \MFP@lang {eng} }
+\DeclareOption{norsk}    { \def \MFP@lang {bm}  }
+\DeclareOption{nynorsk}  { \def \MFP@lang {nn}  }
+
+%% Department:
+
+\DeclareOption{MatNat}{ \def \MFP@Dept {mn}  }
+\DeclareOption{MAT}   { \def \MFP@Dept {mat} }
+
+%% Version of background: 
+
+\DeclareOption{1}{ \def \MFP@nr {1} }
+\DeclareOption{2}{ \def \MFP@nr {2} } % Requires options 'norsk' and 'MatNat'.
+\DeclareOption{3}{ \def \MFP@nr {3} } % Requires options 'norsk' and 'MatNat'.
+
+%% Standard options:
+
+\ExecuteOptions{english}
+\ExecuteOptions{MAT}
+\ExecuteOptions{1}
+\ProcessOptions*
+
+%% Initial code:
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage{eso-pic}
+\RequirePackage{graphicx}
+\RequirePackage{xifthen}
+\IfFileExists{type1cm.sty}{ \RequirePackage{type1cm} }{}
+\IfFileExists{type1ec.sty}{ \RequirePackage{type1ec} }{}
+\graphicspath{ {masterfrontpage_backgrounds/} }
+
+%% The main command:
+
+\newcommand{\masterfrontpage}
+    {
+        \begin{titlepage}
+            \AddToShipoutPictureBG*{\MFP@print@background}
+            \AddToShipoutPictureFG*{\MFP@print@title}
+            \null
+        \end{titlepage}
+        \if@twoside \MFP@blankpage \fi
+    }
+
+%% Additional commands:
+
+\newcommand{\subtitle}[1]{ \def \MFP@subtitle{#1} }
+\subtitle{}
+
+%% Include the title page background:
+
+\newcommand{\MFP@print@background}
+    {
+        {
+            \setlength{\unitlength}{1bp}
+            \put(-15.8, -21.7)
+            {
+                \includegraphics[page = \MFP@nr]
+                                {masterfrontpage-\MFP@Dept-\MFP@lang}
+            }
+        }
+    }
+
+%% Include the title, subtitle, author and date:
+
+\newcommand{\MFP@print@title}
+    {
+        {
+            \setlength{\unitlength}{1cm}
+            \put(3.75, 14.6)
+                {
+                    \vbox to 6.1cm 
+                    {
+                        \hsize=15.5cm
+                        \raggedright
+                        
+                 % Redefinition of standard \LaTeX command because
+                 % the font package 'bera' mangles it!
+                        \ifthenelse{ \isundefined{\fveLaTeX} }{}
+                            {
+                                \DeclareRobustCommand{\mn@LaTeX}
+                                    {
+                                        L\kern-.36em
+                                        {
+                                            \sbox\z@ T
+                                            \vbox to\ht\z@
+                                            {
+                                                \hbox
+                                                    {
+                                                        \check@mathfonts
+                                                        \fontsize\sf@size\z@
+                                                        \math@fontsfalse\selectfont
+                                                        A
+                                                     }
+                                                \vss
+                                             }
+                                        }
+                                        \kern-.15em
+                                        \TeX
+                                    }
+                                \let \LaTeX = \mn@LaTeX
+                           }
+                           
+                        \fontfamily{\MFP@font}
+                        \fontsize{32}{35pt}\selectfont 
+                        \@title
+                
+                        \vskip 0pt plus 1fill
+                        \fontsize{17}{20pt}\selectfont 
+                        \MFP@subtitle
+                        \vskip 0pt plus 2fill\relax
+                        \@author\\[0.5ex] \MFP@kind
+                    }
+                }
+        }
+    }
+
+
+%% Find the best font:
+
+\newcommand{\MFP@font}{phv}           % Helvetica is always available, but use
+\IfFileExists{t1ua1.fd}{ \renewcommand{\MFP@font}{ua1} }{} % Arial if possible.
+
+%% Determine the term (as in "Spring 2015"):
+
+\newcounter{MFP@cur@year}   
+\newcounter{MFP@cur@month}
+\setcounter{MFP@cur@year} { \the\year  }
+\setcounter{MFP@cur@month}{ \the\month }
+
+\ifthenelse{ \theMFP@cur@month < 7 }
+    {
+        \newcommand{\MFP@term@eng}{Spring}
+        \newcommand{\MFP@term@bm} {v\aa ren}
+        \newcommand{\MFP@term@nn} {v\aa ren}
+    }
+    {
+        \newcommand{\MFP@term@eng}{Autumn}
+        \newcommand{\MFP@term@bm} {h\o sten}
+        \newcommand{\MFP@term@nn} {hausten}
+    }
+    
+\newcommand{\MFP@term}{ \csname MFP@term@\MFP@lang\endcsname }
+\newcommand{\MFP@year}{ \arabic{MFP@cur@year}               }
+
+%% Specify "Master's Thesis" in the correct language:
+
+
+\newcommand{\MFP@thesisname@eng}{Master's Thesis}
+\newcommand{\MFP@thesisname@bm} {Masteroppgave}
+\newcommand{\MFP@thesisname@nn} {Masteroppg\aa ve}
+
+%% Define a suitable document kind, like "Master's Thesis, Spring 2015":
+
+\newcommand{\MFP@kind}
+    {
+     	%\csname MFP@thesisname@\MFP@lang\endcsname,~\MFP@term~\MFP@year
+		
+		\csname MFP@thesisname@\MFP@lang\endcsname ~for the degree\\ Modelling and Data Analysis (MOD5960), November~\MFP@year}
+
+    
+
+%% Other utilities:
+
+\newcommand{\MFP@blankpage}
+    {
+        \thispagestyle{empty}
+        \null
+        \newpage
+    }
+
+\endinput
+

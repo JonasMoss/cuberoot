@@ -1,0 +1,10 @@
+library("ks")
+library("RColorBrewer")
+cols = brewer.pal(3, "Set1")
+xx = rbeta(100,2,7)
+tt = seq(0,1,by=0.01)
+kern = gcde(xx)
+
+plot(kde(xx),lty=2,col=cols[1],ylim=c(0,3.1),xlab="x",ylab="Density")
+lines(tt,dbeta(tt,2,7),lty=2,col=cols[2])
+lines(tt,sapply(tt,kern),lty=1,col=cols[3])
